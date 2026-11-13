@@ -28,6 +28,11 @@ class Core
     use UsesContent;
 
     /**
+     * This contains the responsive image selection for offline mirroring.
+     */
+    use UsesImageSelection;
+
+    /**
      * Shared simple parsers for XML, JSON and CSV.
      */
     use UsesFileParsers;

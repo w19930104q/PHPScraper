@@ -106,6 +106,51 @@ Most of the DOM should be covered using these methods:
  **A full list of methods with example code can be found on [phpscraper.de](https://phpscraper.de). Further examples are in the [tests](https://github.com/spekulatius/PHPScraper/tree/master/tests).**
 
 
+### Responsive Image Selection (Offline Mirroring)
+
+For offline mirroring, `selectImages` picks the best-suited URL for every `<img>` on the page - without downloading anything or modifying the DOM. It follows the `<picture>`/`<source>` order with `type` and `media` selection and processes `srcset` (`w`/`x` descriptors) and `sizes` for a given viewport width, device pixel ratio (DPR) and set of supported MIME types:
+
+```PHP
+$web = new \Spekulatius\PHPScraper\PHPScraper;
+$web->go('https://example.com/gallery');
+
+// Viewport 1280px, DPR 2, no AVIF support:
+$result = $web->selectImages(1280, 2.0, ['image/webp', 'image/jpeg', 'image/png']);
+
+print_r($result[0]);
+// [
+//     'index' => 0,
+//     'src' => 'img/cat.jpg',
+//     'selected' => 'https://example.com/img/cat@2x.webp',
+//     'candidates' => [
+//         [
+//             'url' => 'https://example.com/img/cat.webp',
+//             'rawUrl' => 'img/cat.webp',
+//             'origin' => 'source #0 srcset',
+//             'descriptor' => '1x',
+//             'width' => null,
+//             'density' => 1.0,
+//             'selected' => false,
+//             'reason' => 'density 1.00x is below the target 2.00x.',
+//         ],
+//         ...
+//     ],
+//     'diagnostics' => [],
+// ]
+```
+
+The selection follows these rules:
+
+- `<source>` elements of a surrounding `<picture>` are evaluated in document order. The first source with a supported `type`, a matching `media` and a non-empty `srcset` wins. Otherwise the `<img>` `srcset`/`src` is used.
+- `media` supports `min-width`/`max-width` in `px` combined with `and`. Unknown expressions are reported in `diagnostics` and treated as matching (fallback).
+- `sizes` supports `px` and `vw`. A missing `sizes` defaults to `100vw` as per the HTML standard. Unknown expressions are diagnosed and fall back to `100vw` as well.
+- From the candidates, the smallest one meeting the target density (DPR) is selected. If none qualifies, the largest one is selected. Equal densities are decided by document order.
+- Candidates with invalid descriptors are isolated: they are dropped with a diagnostic while the remaining candidates are still processed. Commas within data-URLs are preserved.
+- Missing `src`/`sizes` are handled per HTML rules. Relative URLs are resolved against the `<base>` href or the full page URL. Absolute URLs (including data-URLs) are passed through unchanged.
+
+Each entry contains the `selected` absolute URL, all `candidates` with their elimination `reason` and any `diagnostics` collected along the way. The classic `images` and `imagesWithDetails` methods are not affected.
+
+
 ### Download Files
 
 Besides processing the content on the page itself, you can download files using `fetchAsset`:

@@ -15,6 +15,8 @@ use Symfony\Component\HttpClient\HttpClient as SymfonyHttpClient;
 /**
  * @phpstan-type PHPScraperConfig array{'follow_redirects'?: bool, 'follow_meta_refresh'?: bool, 'max_redirects'?: int, 'agent'?: string, 'proxy'?: string|null, 'timeout'?: int, 'disable_ssl'?: bool}
  *
+ * @phpstan-import-type ImageSelection from UsesImageSelection
+ *
  * All methods and properties below are proxied through `__call()`/`__get()` to the Core class
  * (and the traits it uses). They are documented here purely for IDE/static-analysis support.
  *
@@ -134,6 +136,9 @@ use Symfony\Component\HttpClient\HttpClient as SymfonyHttpClient;
  * @method array<mixed> linksWithDetails()
  * @method array<mixed> images()
  * @method array<mixed> imagesWithDetails()
+ *
+ * Responsive image selection for offline mirroring (see UsesImageSelection):
+ * @method array<int, ImageSelection> selectImages(int $viewportWidth = 1280, float $dpr = 1.0, array<string> $supportedMimeTypes = [])
  *
  * Shared simple parsers for XML, JSON and CSV (see UsesFileParsers):
  *
